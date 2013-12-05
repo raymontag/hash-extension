@@ -56,8 +56,8 @@ Run:
 ## License stuff
 
 * License: MIT
-** Copyright for commander.c/.h: Copyright (c) 2012 TJ Holowaychuk <tj@vision-media.ca>
-** For the rest: Copyright (c) 2013 Karsten-Kai König <kkoenig@posteo.de>
+* Copyright for commander.c/.h: Copyright (c) 2012 TJ Holowaychuk <tj@vision-media.ca>
+* For the rest: Copyright (c) 2013 Karsten-Kai König <kkoenig@posteo.de>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
