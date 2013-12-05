@@ -1,3 +1,11 @@
+/**
+ * main.c
+ *
+ * License: MIT
+ *
+ * Copyright (c) 2013 Karsten-Kai König <kkoenig@posteo.de>
+ */
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,21 +14,31 @@
 #include "sha1.h"
 #include "commander.h"
 
-
+/** Global variables for option parsing:
+ *
+ * input_string - parsing variable for string to hash
+ * orig_string - parsing variable for original string
+ * input_length, orig_length - string lengths of both
+ * key_length - parsing variable for secret length
+ *
+ */
 const char *input_string, *orig_string;
 uint64_t input_length, orig_length;
 int key_length;
 
-/** 0b0000 = Nothing set
- *   0b0001 = orig_string_set
- *   0b0010 = new_string_set
- *   0b0100 = registers set
- *   0b1000 = keylength provided
+/** Option flags variable
+ *
+ * 0b00 = Nothing set
+ * 0b01 = orig_string_set
+ * 0b10 = new_string_set
+ *
  */
-uint8_t flags = 0;
+uint8_t flags = 0b00;
 
 
 static void parse_string(command_t *self) {
+  /* Parse the string to hash */
+
   if(self->arg) {
     input_length = strlen(self->arg);
     input_string = self->arg;
@@ -30,10 +48,12 @@ static void parse_string(command_t *self) {
     input_string = "";
   }
 
-  flags |= 0b0010;
+  flags |= 0b10;
 }
 
 static void parse_orig_string(command_t *self) {
+  /* Parse the original string, e.g. valid massage from server */
+
   if(self->arg) {
     orig_length = strlen(self->arg);
     orig_string = self->arg;
@@ -43,11 +63,13 @@ static void parse_orig_string(command_t *self) {
     orig_string = "";
   }
 
-  flags |= 0b0001;
+  flags |= 0b01;
 }
 
 static void parse_sig(command_t *self) {
-  char tmp_sig_buf[8];
+  /* Parse the signature of the original string */
+
+  char tmp_sig_buf[8]; // To hold the original signature
 
   if(strlen(self->arg) != 40) {
     printf("%d", (int) strlen(self->arg));
@@ -55,6 +77,7 @@ static void parse_sig(command_t *self) {
     exit(1);
   }
 
+  // Slice signature in five 4 byte and copy them to the registers
   memcpy(tmp_sig_buf, &(self->arg[0]), 8 * sizeof(char));
   H0 = (uint32_t) strtol(tmp_sig_buf, NULL, 16);
   memcpy(tmp_sig_buf, &(self->arg[8]), 8 * sizeof(char));
@@ -65,11 +88,11 @@ static void parse_sig(command_t *self) {
   H3 = (uint32_t) strtol(tmp_sig_buf, NULL, 16);
   memcpy(tmp_sig_buf, &(self->arg[32]), 8 * sizeof(char));
   H4 = (uint32_t) strtol(tmp_sig_buf, NULL, 16);
-
-  flags |= 0b0100;
 }
 
 static void parse_length(command_t *self) {
+  /* Parse the secret length */
+
   if(self->arg) {
     key_length = atoi(self->arg);
   } else {
@@ -83,6 +106,14 @@ static void parse_length(command_t *self) {
 }
 
 int main(int argc, char *argv[]) {
+  /** Local variables:
+   *
+   * input_buffer, orig_buffer - to hold the correspondig parsed strings in n*64 Byte blocks, n integer
+   * tmp - SHA1 is processed on 64 Byte blocks, tmp is used to hold them for computation
+   * orig_buffer_length, input_buffer_length - hold the buffer length; this is the string length rounded to a
+   *                                           multiple of 64 Byte
+   * cmd - struct for parsing the options
+   */
   char *input_buffer, *orig_buffer, tmp[BLOCKSIZE];
   uint64_t orig_buffer_length, input_buffer_length;
   command_t cmd;
@@ -95,7 +126,7 @@ int main(int argc, char *argv[]) {
   command_parse(&cmd, argc, argv);
 
   // If -s wasn't set it is expected that the empty string is parsed
-  if(!(flags & 0b0010)) {
+  if(!(flags & 0b10)) {
     input_length = 0;
     input_string = calloc(input_length + 1, sizeof(char));
     input_string = "";
@@ -116,8 +147,8 @@ int main(int argc, char *argv[]) {
   strcpy(input_buffer, input_string);
   padMessage(input_buffer, input_buffer_length, 0);
     
-  // If -o is provided pad the original string
-  if(flags & 0b0001) {
+  // If -o is provided pad the original string but with keylength included
+  if(flags & 0b01) {
     if((orig_length + key_length) % BLOCKSIZE < 56) {
       orig_buffer_length = ((orig_length + key_length) / BLOCKSIZE + 1) * BLOCKSIZE;
     } else {
@@ -128,12 +159,14 @@ int main(int argc, char *argv[]) {
     padMessage(orig_buffer, orig_buffer_length, (uint64_t) key_length);
   }
 
+  // Compute hash for the input string, when indicated with updated registers
   for(uint64_t i = 0; i < input_buffer_length / BLOCKSIZE; i++) {
     memcpy(tmp, &input_buffer[i * BLOCKSIZE], BLOCKSIZE);
     processBlock(tmp);
   }
     
-  if(!(flags & 0b0001)) {
+  // Print the result
+  if(!(flags & 0b01)) { // No original string provided
     printf("Signature: %08x%08x%08x%08x%08x\n", H0, H1, H2, H3, H4);
   } else {
     printf("New Signature: %08x%08x%08x%08x%08x\n\n", H0, H1, H2, H3, H4);

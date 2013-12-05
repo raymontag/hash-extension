@@ -1,10 +1,18 @@
+/**
+ * sha1.c
+ *
+ * License: MIT
+ *
+ * Copyright (c) 2013 Karsten-Kai König <kkoenig@posteo.de>
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
 
 #include "sha1.h"
 
-
+// Standard values of the registers as specified by NIST-standard
 uint32_t H0 = 0x67452301;
 uint32_t H1 = 0xEFCDAB89;
 uint32_t H2 = 0x98BADCFE;
@@ -17,11 +25,13 @@ void padMessage(char *buffer, uint64_t buffer_length, uint64_t key_length) {
   buffer[input_length] = 0x80;
   input_length += key_length;
 
+   // If condition is true padding fits in the block which contains the string
   if((input_length + 1) % BLOCKSIZE <= 56) {
     for(uint64_t i = 0; i < 56 - ((input_length + 1) % BLOCKSIZE); i++) {
       buffer[input_length + 1 + i] = 0x00;
     }
-  } else {
+  } else { // Else padding has to be continued in a new block
+    // Fill second last block with zeros
     for(int i = 0; 1; i++) {
       buffer[input_length + 1 + i] = 0x00;
       if(((input_length + 2 + i)) % BLOCKSIZE == 0)
@@ -33,8 +43,8 @@ void padMessage(char *buffer, uint64_t buffer_length, uint64_t key_length) {
     }
   }
 
-  input_length *= 8;
-  buffer[buffer_length - 8 - key_length] = (unsigned char) ((input_length>>56)&0xff);
+  input_length *= 8; // Number of bits not of bytes is saved!
+  buffer[buffer_length - 8 - key_length] = (unsigned char) ((input_length>>56)&0xff); // Big endian
   buffer[buffer_length - 7 - key_length] = (unsigned char) ((input_length>>48)&0xff);
   buffer[buffer_length - 6 - key_length] = (unsigned char) ((input_length>>40)&0xff);
   buffer[buffer_length - 5 - key_length] = (unsigned char) ((input_length>>32)&0xff);
@@ -45,6 +55,7 @@ void padMessage(char *buffer, uint64_t buffer_length, uint64_t key_length) {
 }
 
 void processBlock(char block[64]) {
+  //Here comes the math-magic
   uint32_t W[80] = { 0 };
   uint32_t A, B, C, D, E, TEMP;
 

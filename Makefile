@@ -2,19 +2,18 @@ CC = gcc
 FLAGS = --std=c99
 DEVFLAGS = -Wall -Wextra
 
-OBJECTS = sha1.o commander.o
 CFILES = main.c sha1.c commander.c
 TARGET = hash_extension
 
-all: $(OBJECTS)
+all:
 	$(CC) $(FLAGS) $(CFILES) -o $(TARGET)
 
-devel: $(OBJECTS)
+devel:
 	$(CC) $(FLAGS) $(DEVFLAGS) -g $(CFILES) -o $(TARGET)
 
-%.o: %.c
-	$(CC) $(FLAGS) -c $<
+install:
+	cp $(TARGET) /usr/bin/$(TARGET)
 
 clean:
-	rm *.o hash_extension
+	rm hash_extension
 
