@@ -31,18 +31,18 @@ The aim of this program is to implement this attack for the SHA1-algorithm. One 
 
 ## Example
 
-   hash_extension -s secretfoo
-   Signature: a5e702a34cc6d079645ff9634ac4b7c16ac41a68
+     hash_extension -s secretfoo
+     Signature: a5e702a34cc6d079645ff9634ac4b7c16ac41a68
 
 
-   hash_extension -o foo -s bar -S a5e702a34cc6d079645ff9634ac4b7c16ac41a68 -k 6
-   New Signature: 1acc2d421c1f1d209c919dfeef74ee94443b5afe
+     hash_extension -o foo -s bar -S a5e702a34cc6d079645ff9634ac4b7c16ac41a68 -k 6
+     New Signature: 1acc2d421c1f1d209c919dfeef74ee94443b5afe
 
-   What you probably wanna send to a server: 
-   666f6f80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000048626172
+     What you probably wanna send to a server: 
+     666f6f80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000048626172
 
-   Or with characters: 
-   foo80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000048bar
+     Or with characters: 
+     foo80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000048bar
 
 *Warning*: The implementation of SHA1 is not intended to be safe! Use proved and tested libraries for cryptography, only.
 
